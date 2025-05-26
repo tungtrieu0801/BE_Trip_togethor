@@ -22,7 +22,7 @@ export class UserResponseDto {
     lastLogin?: Date;
 
     @Expose()
-    role?: string;
+    role?: string[];
 
     @Expose()
     isEmailVerified: boolean;

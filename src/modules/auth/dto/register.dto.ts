@@ -6,11 +6,11 @@ export class RegisterRequest {
     username: string;
 
     @IsNotEmpty()
-    password: string;
-
-    @IsNotEmpty()
     email: string;
     
+    @IsNotEmpty()
+    password: string;
+
     @IsNotEmpty()
     phoneNumber: string;
 

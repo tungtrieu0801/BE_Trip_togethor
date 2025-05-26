@@ -1,4 +1,5 @@
-import { Column, Entity, PrimaryGeneratedColumn, Table } from "typeorm";
+import { Column, Entity, JoinTable, ManyToMany, PrimaryGeneratedColumn, Table } from "typeorm";
+import { Role } from "../role/role.entity";
 
 @Entity('users')
 export class User { 
@@ -15,28 +16,32 @@ export class User {
     @Column({ type: 'varchar', length: 100 })
     password: string;
 
-    @Column({ type: 'varchar', length: 50, nullable: true })
+    @Column({name: 'phone_number' ,type: 'varchar', length: 50, nullable: true })
     phoneNumber: string;
 
-    @Column({ type: 'boolean', default: false })
+    @Column({ name: 'is_active', type: 'boolean', default: true })
     isActive: boolean;
 
-    @Column({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
+    @Column({ name: 'created_at', type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
     createdAt: Date;
 
-    @Column({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP', onUpdate: 'CURRENT_TIMESTAMP' })
+    @Column({ name: 'updated_at', type: 'timestamp', default: () => 'CURRENT_TIMESTAMP', onUpdate: 'CURRENT_TIMESTAMP' })
     updatedAt: Date;
 
-    @Column({ type: 'timestamp', nullable: true })
+    @Column({ name: 'last_login', type: 'timestamp', nullable: true, default: () => 'CURRENT_TIMESTAMP' })
     lastLogin: Date;
 
-    @Column({ type: 'varchar', length: 50, nullable: true })
-    role: string;
-
-    @Column({ type: 'boolean', default: false })
+    @Column({ name: 'is_email_verified', type: 'boolean', default: false })
     isEmailVerified: boolean;
 
-    @Column({ type: 'boolean', default: false })
+    @Column({ name: 'is_phone_number_verified', type: 'boolean', default: false })
     isPhoneNumberVerified: boolean;
     
+    @ManyToMany(() => Role, (role) => role.users, { eager: true })
+    @JoinTable({
+        name: 'user_roles',
+        joinColumn: { name: 'user_id', referencedColumnName: 'id' },
+        inverseJoinColumn: { name: 'role_id', referencedColumnName: 'id' },
+    })
+    roles: Role[];
 }

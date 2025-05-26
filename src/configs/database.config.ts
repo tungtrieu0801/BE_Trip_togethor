@@ -9,8 +9,8 @@ export const getTypeOrmConfig = (config: ConfigService): TypeOrmModuleOptions =>
   password: config.get<string>('DB_PASSWORD'),
   database: config.get<string>('DB_NAME'),
   autoLoadEntities: true,
-  synchronize: true,
+  synchronize: false, // Set to true only in development, false in production
   ssl: {
     rejectUnauthorized: false, // Set to true if you want to enforce SSL certificate validation
-  }
+  },
 });

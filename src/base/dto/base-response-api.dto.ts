@@ -1,5 +1,5 @@
 export class BaseResponseApiDto<T> {
-    data: T;
+    data?: T | null;
     message: string;
     statuCode: number;
 }

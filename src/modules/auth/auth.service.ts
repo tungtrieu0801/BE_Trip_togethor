@@ -1,30 +1,56 @@
 import { Injectable } from '@nestjs/common';
 import { LoginRequest, LoginResponse, RegisterRequest, RegisterResponse } from './dto';
 import { BaseResponseApiDto } from 'src/base/dto/base-response-api.dto';
-import { log } from 'console';
+import { UserService } from '../user/user.service';
+import { STATUS_CODE, USER_MESSAGES } from 'src/constants';
+import { plainToInstance } from 'class-transformer';
+import { JwtService } from '@nestjs/jwt';
+import { ConfigService } from '@nestjs/config';
+import { gennerateJwtToken } from 'src/utils';
 
 @Injectable()
 export class AuthService {
+
+    constructor(
+        private readonly userService: UserService,
+        private readonly jwtService: JwtService,
+        private readonly configService: ConfigService,
+    ) {}
   
-    public login (loginDto: LoginRequest): BaseResponseApiDto<LoginResponse> {
+    public async login (loginRequest: LoginRequest): Promise<BaseResponseApiDto<LoginResponse>> {
 
-        const shit = new BaseResponseApiDto<LoginResponse>();
-        shit.message = "dang ki thanh cong";
-        shit.data = new LoginResponse();
-        shit.statuCode = 200;
+        const user = await this.userService.validateUser(loginRequest);
+        if (!user) {
+            return {
+                statuCode: STATUS_CODE.UNAUTHORIZED,
+                message: 'Invalid username or password',
+                data: null,
+            };
+        }
+
+        const payLoad = {
+            sub: user.id,
+            username: user.username,
+        }
+        const accessToken = gennerateJwtToken(payLoad, this.jwtService);
         
-        return shit;
+        const loginResponse = plainToInstance(LoginResponse, {
+            id: user.id,
+            username: user.username,
+            email: user.email,
+            phoneNumber: user.phoneNumber,
+            accessToken: accessToken,
+        })
+        
+        return {
+            statuCode: STATUS_CODE.OK,
+            message: USER_MESSAGES.LOGIN_SUCCESS,
+            data: loginResponse,
+        }
     }
 
-    public register (registerDto: RegisterRequest): BaseResponseApiDto<RegisterResponse> {
-        const data = new RegisterResponse();
-        data.email = "123";
-        const shit = new BaseResponseApiDto<RegisterResponse>();
-        shit.message = "dang ki thanh cong";
-        shit.data = data;
-
-        shit.statuCode = 200;
-        
-        return shit;
+    public register (registerRequest: RegisterRequest): Promise<BaseResponseApiDto<RegisterResponse>> {
+        return this.userService.createUser(registerRequest);
     }
+
 }
