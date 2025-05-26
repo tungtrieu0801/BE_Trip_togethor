@@ -36,6 +36,9 @@ export class User {
 
     @Column({ name: 'is_phone_number_verified', type: 'boolean', default: false })
     isPhoneNumberVerified: boolean;
+
+    @Column({ name: 'avatar', type: 'varchar', length: 200, nullable: true })
+    avatar: string;
     
     @ManyToMany(() => Role, (role) => role.users, { eager: true })
     @JoinTable({

@@ -2,6 +2,7 @@ import { DataSource, Repository } from "typeorm";
 import { User } from "./user.entity";
 import { Injectable } from "@nestjs/common";
 import { RegisterRequest } from "../auth/dto";
+import { hashPassword } from "src/utils";
 
 @Injectable()
 export class UserRepository extends Repository<User> {
@@ -9,7 +10,16 @@ export class UserRepository extends Repository<User> {
         super(User, dataSource.createEntityManager());
     }
 
+    async findUserWithRole (username: string): Promise<User | null> {
+        return this.dataSource.getRepository(User)
+            .createQueryBuilder ('user')
+            .leftJoinAndSelect('user.roles', 'role')
+            .where('user.username = :username', { username })
+            .getOne();
+    }
+
     async createUserWithDefaultsRole(registerUserDto: RegisterRequest): Promise<User> {
+        // Common Table Expressions (CTE) + Chained Inserts
         const result = await this.dataSource.query(
             `
             WITH new_user AS (
@@ -20,21 +30,34 @@ export class UserRepository extends Repository<User> {
             ),
             inserted_role AS (
                 INSERT INTO "user_roles" (user_id, role_id)
-                SELECT id, 2 FROM new_user
-                RETURNING *
+                SELECT u.id, $5::int
+                FROM new_user u
+                RETURNING user_id, role_id
             )
             SELECT
-                u.id, u.username, u.email, u.phone_number, u.is_active, u.created_at, u.updated_at, u.last_login,
-                u.is_email_verified, u.is_phone_number_verified
+                u.id,
+                u.username,
+                u.email,
+                u.password,
+                u.phone_number,
+                u.is_active,
+                u.created_at,
+                u.updated_at,
+                u.last_login,
+                u.is_email_verified,
+                u.is_phone_number_verified,
+                u.avatar,
+                r.name AS role_name
             FROM new_user u
-            LEFT JOIN user_roles ur ON u.id = ur.user_id
-            LEFT JOIN roles r ON ur.role_id = r.id
+            LEFT JOIN inserted_role ir ON u.id = ir.user_id
+            LEFT JOIN roles r ON ir.role_id = r.id
             `,
             [
                 registerUserDto.username,
                 registerUserDto.email,
-                registerUserDto.password,
+                await hashPassword(registerUserDto.password, 10),
                 registerUserDto.phoneNumber,
+                2 //Role user
             ]
         );
         const user = {
@@ -48,14 +71,10 @@ export class UserRepository extends Repository<User> {
             updatedAt: result[0].updated_at,
             isEmailVerified: result[0].is_email_verified,
             isPhoneNumberVerified: result[0].is_phone_number_verified,
-            roles: [
-                {
-                id: result[0].role_id,
-                name: result[0].role_name,
-                },
-            ],
+            avatar: result[0].avatar,
+            roles: [result[0].role_name],
         };
-
-    return user as User;
+        return user as User;
     }
+
 }

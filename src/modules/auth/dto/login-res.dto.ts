@@ -19,4 +19,8 @@ export class LoginResponse {
 
     @Expose()
     roles: string[];
+
+    @Expose()
+    avatar: string;
+    
 }

@@ -23,7 +23,7 @@ export class AuthService {
         if (!user) {
             return {
                 statuCode: STATUS_CODE.UNAUTHORIZED,
-                message: 'Invalid username or password',
+                message: USER_MESSAGES.INVALID_CREDENTIALS,
                 data: null,
             };
         }
@@ -39,7 +39,9 @@ export class AuthService {
             username: user.username,
             email: user.email,
             phoneNumber: user.phoneNumber,
+            roles: user.roles.map(role => role.name),
             accessToken: accessToken,
+            avatar: user.avatar,
         })
         
         return {

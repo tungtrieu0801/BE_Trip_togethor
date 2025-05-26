@@ -14,5 +14,9 @@ export class RegisterResponse {
     @Expose()
     phoneNumber: string;
 
-    role: string[];
+    @Expose()
+    roles: string[];
+
+    @Expose()
+    avatar: string;
 }

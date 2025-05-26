@@ -29,19 +29,17 @@ export class UserService {
 
     public async createUser(registerUserDto: RegisterRequest): Promise<BaseResponseApiDto<RegisterResponse>> {
         await this.validateUserRegister(registerUserDto);
-        const hashedPassword = await hashPassword(registerUserDto.password, 10);
-        const newUser = this.userRepository.create({
-            username: registerUserDto.username,
-            password: hashedPassword,
-            email: registerUserDto.email,
-            phoneNumber: registerUserDto.phoneNumber
-        });
         const savedUser = await this.userRepository.createUserWithDefaultsRole(registerUserDto);
         return {
             statuCode: 201,
             message: "User created successfully",
-            data: plainToInstance(RegisterResponse, savedUser, {
-                excludeExtraneousValues: true
+            data: plainToInstance(RegisterResponse, {
+                userId: savedUser.id,
+                username: savedUser.username,
+                email: savedUser.email,
+                phoneNumber: savedUser.phoneNumber,
+                roles: savedUser.roles,
+                avatar: savedUser.avatar,
             }),
         }
     }
@@ -52,12 +50,13 @@ export class UserService {
      * @param password is the password of the user
      * @returns user if valid, null if invalid
      */
-    public async validateUser(LoginRequest: LoginRequest): Promise<User | null> {
-        const user = await this.userRepository.findOne({ where: {username: LoginRequest.username}});       
+    public async validateUser(loginRequest: LoginRequest): Promise<User | null> {
+        // const user = await this.userRepository.findOne({ where: {username: loginRequest.username}});    
+        const user = await this.userRepository.findUserWithRole(loginRequest.username);   
         if (!user) {
             return null;
         }
-        const isValidPassword = await bcrypt.compare(LoginRequest.password, user.password);
+        const isValidPassword = await bcrypt.compare(loginRequest.password, user.password);
         if (!isValidPassword) {
             return null;
         }
