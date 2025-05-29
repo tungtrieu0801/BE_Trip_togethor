@@ -70,11 +70,13 @@ jobs:
           command: |
             source $BASH_ENV
             ssh -o StrictHostKeyChecking=no "$VPS_USER@$VPS_HOST" \
-              "cd \"$VPS_PATH\" && \
-               docker load -i image.tar && \
-               docker stop \"$CONTAINER_NAME\" || true && \
-               docker rm \"$CONTAINER_NAME\" || true && \
-               docker run -d --name \"$CONTAINER_NAME\" \"$IMAGE_NAME:$TAG\""
+              "cd '$VPS_PATH' && \
+              docker load -i image.tar && \
+              docker stop '$CONTAINER_NAME' || true && \
+              docker rm '$CONTAINER_NAME' || true && \
+              docker run -d --name '$CONTAINER_NAME' \
+                --env-file /home/azureuser/deploy/envs/app.env \
+                '$IMAGE_NAME:$TAG'"
 
 workflows:
   build-and-deploy:
