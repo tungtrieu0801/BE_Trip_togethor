@@ -75,14 +75,13 @@ jobs:
           name: Load image and restart container on VPS
           command: |
             source $BASH_ENV
-            ssh -o StrictHostKeyChecking=no $VPS_USER@$VPS_HOST << EOF
-              cd $VPS_PATH
-              docker load -i image.tar
-              docker stop $CONTAINER_NAME || true
-              docker rm $CONTAINER_NAME || true
-              docker run -d --name $CONTAINER_NAME $IMAGE_NAME:$TAG
+            ssh -o StrictHostKeyChecking=no $VPS_USER@$VPS_HOST \<< EOF
+            cd $VPS_PATH
+            docker load -i image.tar
+            docker stop $CONTAINER_NAME || true
+            docker rm $CONTAINER_NAME || true
+            docker run -d --name $CONTAINER_NAME $IMAGE_NAME:$TAG
             EOF
-
 workflows:
   build-and-deploy:
     jobs:
