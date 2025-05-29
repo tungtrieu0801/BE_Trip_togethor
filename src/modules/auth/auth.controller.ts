@@ -17,4 +17,8 @@ export class AuthController {
     return this.authService.register(registerDto);
   }
 
+  @Get('test')
+  public test(): string {
+    return 'Hello world!';
+  }
 }
