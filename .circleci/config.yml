@@ -29,19 +29,24 @@ jobs:
       - setup_remote_docker
       - run:
           name: Generate TAG from timestamp
-          command: |
-            echo "export TAG=$(date +%Y%m%d%H%M%S)" >> $BASH_ENV
+          command: echo "export TAG=$(date +%Y%m%d%H%M%S)" >> $BASH_ENV
       - run:
           name: Build Docker image with timestamp tag
           command: |
             source $BASH_ENV
             docker build -t $IMAGE_NAME:$TAG .
             echo $TAG > tag.txt
+      - run:
+          name: Save Docker image to tarball (on remote Docker)
+          command: |
+            source $BASH_ENV
+            docker save $IMAGE_NAME:$TAG -o image.tar
       - persist_to_workspace:
           root: .
           paths:
             - .
             - tag.txt
+            - image.tar
 
   deploy-to-vps:
     docker:
@@ -55,7 +60,6 @@ jobs:
     steps:
       - attach_workspace:
           at: .
-      - setup_remote_docker
       - add_ssh_keys:
           fingerprints:
             - "YOUR_SSH_KEY_FINGERPRINT"
@@ -63,19 +67,15 @@ jobs:
           name: Load TAG from file
           command: echo "export TAG=$(cat tag.txt)" >> $BASH_ENV
       - run:
-          name: Save Docker image to tarball
-          command: |
-            source $BASH_ENV
-            docker save $IMAGE_NAME:$TAG -o image.tar
-      - run:
           name: Copy image.tar to VPS
           command: |
+            source $BASH_ENV
             scp -o StrictHostKeyChecking=no image.tar $VPS_USER@$VPS_HOST:$VPS_PATH
       - run:
           name: Load image and restart container on VPS
           command: |
             source $BASH_ENV
-            ssh -o StrictHostKeyChecking=no $VPS_USER@$VPS_HOST \<< EOF
+            ssh -o StrictHostKeyChecking=no $VPS_USER@$VPS_HOST << EOF
               cd $VPS_PATH
               docker load -i image.tar
               docker stop $CONTAINER_NAME || true
