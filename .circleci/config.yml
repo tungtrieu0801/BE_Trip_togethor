@@ -20,7 +20,7 @@ jobs:
 
   docker-build:
     docker:
-      - image: cimg/docker:stable
+      - image: docker:20.10.17
     environment:
       IMAGE_NAME: trip_togethor_image
     steps:
