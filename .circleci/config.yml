@@ -37,14 +37,13 @@ jobs:
             docker build -t $IMAGE_NAME:$TAG .
             echo $TAG > tag.txt
       - run:
-          name: Save Docker image to tarball (on remote Docker)
+          name: Save Docker image to tarball
           command: |
             source $BASH_ENV
             docker save $IMAGE_NAME:$TAG -o image.tar
       - persist_to_workspace:
           root: .
           paths:
-            - .
             - tag.txt
             - image.tar
 
@@ -52,17 +51,12 @@ jobs:
     docker:
       - image: cimg/base:stable
     environment:
-      VPS_HOST: $VPS_HOST
-      VPS_USER: $VPS_USER
-      VPS_PATH: $VPS_PATH
       IMAGE_NAME: trip_togethor_image
       CONTAINER_NAME: trip_togethor_container
     steps:
       - attach_workspace:
           at: .
-      - add_ssh_keys:
-          fingerprints:
-            - "YOUR_SSH_KEY_FINGERPRINT"
+      - add_ssh_keys
       - run:
           name: Load TAG from file
           command: echo "export TAG=$(cat tag.txt)" >> $BASH_ENV
@@ -70,18 +64,19 @@ jobs:
           name: Copy image.tar to VPS
           command: |
             source $BASH_ENV
-            scp -o StrictHostKeyChecking=no image.tar $VPS_USER@$VPS_HOST:$VPS_PATH
+            scp -o StrictHostKeyChecking=no image.tar "$VPS_USER@$VPS_HOST:$VPS_PATH"
       - run:
           name: Load image and restart container on VPS
           command: |
             source $BASH_ENV
-            ssh -o StrictHostKeyChecking=no $VPS_USER@$VPS_HOST \<< EOF
-            cd $VPS_PATH
-            docker load -i image.tar
-            docker stop $CONTAINER_NAME || true
-            docker rm $CONTAINER_NAME || true
-            docker run -d --name $CONTAINER_NAME $IMAGE_NAME:$TAG
-            EOF
+            ssh -o StrictHostKeyChecking=no "$VPS_USER@$VPS_HOST" bash << 'EOF'
+              cd "$VPS_PATH"
+              docker load -i image.tar
+              docker stop "$CONTAINER_NAME" || true
+              docker rm "$CONTAINER_NAME" || true
+              docker run -d --name "$CONTAINER_NAME" "$IMAGE_NAME:$TAG"
+              EOF
+
 workflows:
   build-and-deploy:
     jobs:
