@@ -77,7 +77,7 @@ jobs:
           name: Load image and restart container on VPS
           command: |
             source $BASH_ENV
-            ssh -o StrictHostKeyChecking=no $VPS_USER@$VPS_HOST << EOF
+            ssh -o StrictHostKeyChecking=no $VPS_USER@$VPS_HOST \<< EOF
               cd $VPS_PATH
               docker load -i image.tar
               docker stop $CONTAINER_NAME || true
