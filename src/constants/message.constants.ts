@@ -15,4 +15,5 @@ export const USER_MESSAGES = {
     EMAIL_EXISTS: 'Email already exists',
     PHONE_NUMBER_EXISTS: 'Phone number already exists',
     LOGIN_SUCCESS: 'Login successful',
+    USER_NOT_FOUND: 'User not found',
 }

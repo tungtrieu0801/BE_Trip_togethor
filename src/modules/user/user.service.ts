@@ -15,6 +15,27 @@ export class UserService {
         private readonly userRepository: UserRepository,
     ) {}
 
+    public async searchUserByPhoneNumber(phoneNumber: string): Promise<BaseResponseApiDto<UserResponseDto>> {
+        const user = await this.userRepository.findOne({
+            where: { phoneNumber },
+        });
+        if (!user) {
+            return {
+                statuCode: STATUS_CODE.NOT_FOUND,
+                message: USER_MESSAGES.USER_NOT_FOUND,
+                data: null,
+            };
+        }
+        const data = plainToInstance(UserResponseDto, user, {
+            excludeExtraneousValues: true
+        });
+        return {
+            statuCode: STATUS_CODE.OK,
+            message: USER_MESSAGES.FETCH_SUCCESS,
+            data: data,
+        };
+    }
+
     public async getAllUsers(): Promise<BaseResponseApiDto<UserResponseDto[]>> {
         const users = await this.userRepository.find();
         const data = plainToInstance(UserResponseDto, users, {

@@ -6,3 +6,14 @@ export function gennerateJwtToken(
 ): string {
     return jwtService.sign(payload);
 }
+
+export function verifyJwtToken(
+    token: string,
+    jwtService: JwtService,
+): Record<string, any> | null {
+    try {
+        return jwtService.verify(token);
+    } catch (error) {
+        return null;
+    }
+}
